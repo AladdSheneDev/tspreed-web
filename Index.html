@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>tspreed-web</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<style>
+  body {
+    background: #0f0f0f;
+    color: #eee;
+    font-family: system-ui, sans-serif;
+    text-align: center;
+    padding: 2rem;
+  }
+
+  textarea {
+    width: 90%;
+    max-width: 800px;
+    height: 150px;
+    background: #1a1a1a;
+    color: #eee;
+    border: 1px solid #333;
+    padding: 1rem;
+    font-size: 1rem;
+  }
+
+  #reader {
+    font-size: 3rem;
+    margin: 2rem 0;
+    font-family: monospace;
+    height: 4rem;
+  }
+
+  .orp {
+    color: #ff3b3b;
+  }
+
+  button, input {
+    background: #222;
+    color: #eee;
+    border: 1px solid #444;
+    padding: .5rem 1rem;
+    margin: .3rem;
+    font-size: 1rem;
+  }
+
+  #progress {
+    opacity: .7;
+    margin-top: .5rem;
+  }
+</style>
+</head>
+<body>
+
+<h1>tspreed-web</h1>
+<p>RSVP speed reading</p>
+
+<textarea id="input" placeholder="Paste text here..."></textarea>
+
+
+<label>
+  WPM:
+  <input type="number" id="wpm" value="300" min="50" max="2000">
+</label><br>
+
+<button onclick="start()">Start</button>
+<button onclick="pause()">Pause</button>
+<button onclick="reset()">Reset</button>
+
+<div id="reader"></div>
+<div id="progress"></div>
+
+<script>
+let words = [];
+let index = 0;
+let timer = null;
+let running = false;
+
+function splitWords(text) {
+  return text.trim().split(/\s+/);
+}
+
+function orpIndex(word) {
+  if (word.length <= 1) return 0;
+  if (word.length <= 5) return 1;
+  if (word.length <= 9) return 2;
+  return 3;
+}
+
+function renderWord(word) {
+  const i = orpIndex(word);
+  const left = word.slice(0, i);
+  const center = word[i] || "";
+  const right = word.slice(i + 1);
+
+  return `${left}<span class="orp">${center}</span>${right}`;
+}
+
+function tick() {
+  if (index >= words.length) {
+    pause();
+    return;
+  }
+  document.getElementById("reader").innerHTML = renderWord(words[index]);
+  document.getElementById("progress").textContent =
+    `${index + 1} / ${words.length}`;
+  index++;
+}
+
+function start() {
+  if (running) return;
+
+  if (words.length === 0) {
+    words = splitWords(document.getElementById("input").value);
+    index = 0;
+  }
+
+  const wpm = Number(document.getElementById("wpm").value);
+  const delay = 60000 / wpm;
+
+  running = true;
+  timer = setInterval(tick, delay);
+}
+
+function pause() {
+  running = false;
+  clearInterval(timer);
+}
+
+function reset() {
+  pause();
+  words = [];
+  index = 0;
+  document.getElementById("reader").textContent = "";
+  document.getElementById("progress").textContent = "";
+}
+</script>
+
+</body>
+</html>
+
